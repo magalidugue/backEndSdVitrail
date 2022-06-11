@@ -1,0 +1,60 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model sessions {
+  id              Int               @id @default(autoincrement())
+  date            DateTime?         @db.Date
+  time            String?           @db.VarChar(255)
+  fullprice       String?           @db.VarChar(255)
+  halprice        String?           @db.VarChar(255)
+  visitid         Int?
+  visits          visits?           @relation(fields: [visitid], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "sessions_visits__fk")
+  visits_sessions visits_sessions[]
+  visits_visitors visits_visitors[]
+}
+
+model visitors {
+  id              Int               @id @default(autoincrement())
+  name            String?           @db.VarChar(255)
+  firstname       String?           @db.VarChar(255)
+  email           String?           @db.VarChar(255)
+  phone           String?           @db.VarChar(255)
+  visits_visitors visits_visitors[]
+}
+
+model visits {
+  id                Int               @id @default(autoincrement())
+  title             String?           @db.VarChar(255)
+  littledescription String?           @db.VarChar(255)
+  bigdescription    String?           @db.VarChar(255)
+  imageurl          String?           @db.VarChar(255)
+  sessions          sessions[]
+  visits_sessions   visits_sessions[]
+  visits_visitors   visits_visitors[]
+}
+
+/// The underlying table does not contain a valid unique identifier and can therefore currently not be handled by the Prisma Client.
+model visits_sessions {
+  visit_id   Int?
+  session_id Int?
+  id         Int       @id(map: "visits_sessions_pk") @unique(map: "visits_sessions_id_uindex") @default(autoincrement())
+  sessions   sessions? @relation(fields: [session_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  visits     visits?   @relation(fields: [visit_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+/// The underlying table does not contain a valid unique identifier and can therefore currently not be handled by the Prisma Client.
+model visits_visitors {
+  visit_id    Int?
+  visitors_id Int?
+  id          Int       @id(map: "visits_visitors_pk") @unique(map: "visits_visitors_id_uindex") @default(autoincrement())
+  session_id  Int?
+  sessions    sessions? @relation(fields: [session_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "visits_visitors_sessions__fk")
+  visits      visits?   @relation(fields: [visit_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  visitors    visitors? @relation(fields: [visitors_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+}
